@@ -1,0 +1,16 @@
+---
+{{- if .Values.configmap.enabled  -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "main-chart.fullname" . }}-properties
+  {{- with .Values.configmap.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+data:
+{{- range $path, $_ := (.Files.Glob "apps/cms/*") }}
+  {{ trimPrefix "apps/cms/" $path }}: |
+    {{- tpl ($.Files.Get $path) $ | nindent 4 }}
+{{ end }}
+{{- end }}

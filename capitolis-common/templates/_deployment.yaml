@@ -1,0 +1,177 @@
+{{- define "main-chart.deployment" -}}
+{{- $env_vars := .Values.env }}
+{{- $repo := required "image.repository is required" .Values.image.repository }}
+{{- $tag := required "image.tag is required" .Values.image.tag }}
+{{- $propertiesEnvName := required "propertiesEnvName is required" .Values.propertiesEnvName }}
+{{- $service_name := include "main-chart.fullname" . }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "main-chart.fullname" . }}
+  labels:
+    {{- include "main-chart.labels" . | nindent 4 }}
+    app: {{ include "main-chart.fullname" . }}
+    project: capitolis
+    team: {{ include "main-chart.teamName" . }}
+{{- if .Values.labels }}
+{{ toYaml .Values.labels | indent 4 }}
+{{- end }}
+spec:
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit | default 0 }}
+  {{- if .Values.strategy }}
+  strategy:
+{{ toYaml .Values.strategy | indent 6 }}
+  {{- end }}
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "main-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- if .Values.role_name }}
+        iam.amazonaws.com/role: {{ .Values.role_name }}
+        {{- end }}
+        checksum/config: {{ include (print $.Template.BasePath "/cm.yaml") . | sha256sum }}
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "main-chart.selectorLabels" . | nindent 8 }}
+        app: {{ include "main-chart.fullname" . }}
+        project: capitolis
+        team: {{ include "main-chart.teamName" . }}
+        spotinst.io/restrict-scale-down: "true"
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "main-chart.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+
+
+      containers:
+        - name: {{ include "main-chart.fullname" . }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ $repo }}:{{ $tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+        {{- if .Values.containerCommand }}
+          command:
+            {{ toYaml .Values.containerCommand | nindent 12 }}
+        {{- end }}
+          env:
+            {{- range $name, $value := .Values.env }}
+            {{- if not (empty $value) }}
+            - name: {{ $name | quote }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- end }}
+            {{- range $name, $value := .Values.extraEnvVars }}
+            {{- if not (empty $value) }}
+            - name: {{ $name | quote }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- end }}
+
+          {{- if .Values.externalsecrets.enabled }}
+          envFrom:
+            - secretRef:
+                name: capitolis-secrets
+          {{- end }}
+          volumeMounts:
+            {{- if .Values.externalsecrets.enabled }}
+            - mountPath: {{ .Values.externalsecrets.path }}
+              name: capitolis-secrets
+              subPath: application-kamus.properties
+            {{- end }}
+
+          {{- if .Values.configmap.load_default_application_properties }}
+            - mountPath: /usr/src/app/config/application-{{ $propertiesEnvName }}.properties
+              name: config
+              subPath: application-{{ $propertiesEnvName }}.properties
+
+            - mountPath: /usr/src/app/config/application-json_layout.properties
+              name: config-log4j-properties
+              subPath: application-json_layout.properties
+
+            - mountPath: /usr/src/app/config/log4j2-json_layout.json
+              name: config-log4j
+              subPath: log4j2-json_layout.json
+          {{- end }}
+
+          {{- range $volumeMount := .Values.extraVolumeMounts }}
+            - name: {{ $volumeMount.name }}
+              mountPath: {{ $volumeMount.mountPath }}
+              {{ if $volumeMount.subPath }}
+              subPath: {{ $volumeMount.subPath }}
+              {{- end }}
+              {{ if $volumeMount.readOnly }}
+              readOnly: {{ $volumeMount.readOnly }}
+              {{- end }}
+          {{- end }}
+
+          env:
+            {{- range $name, $value := $env_vars }}
+            {{- if not (empty $value) }}
+            - name: {{ $name | quote }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- end }}
+            {{- range $name, $value := .Values.extraEnvVars }}
+            {{- if not (empty $value) }}
+            - name: {{ $name | quote }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- end }}
+
+          {{- if .Values.livenessProbe }}
+          livenessProbe: {{ toYaml .Values.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.readinessProbe }}
+          readinessProbe: {{ toYaml .Values.readinessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.resources }}
+          resources: {{ toYaml .Values.resources | nindent 12}}
+          {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+      {{ toYaml .Values.nodeSelector | indent 8 }}
+      {{- end }}
+      volumes:
+      {{- if .Values.configmap.load_default_application_properties }}
+        - configMap:
+            items:
+            - key: application-env.properties
+              path: "application-{{ $propertiesEnvName }}.properties"
+            name: "{{ $service_name }}-properties"
+          name: config
+        - configMap:
+            items:
+              - key: application-json_layout.properties
+                path: application-json_layout.properties
+            name: {{ $service_name }}-properties
+          name: config-log4j-properties
+        - configMap:
+            items:
+              - key: log4j2-json_layout.json
+                path: log4j2-json_layout.json
+            name: {{ $service_name }}-properties
+          name: config-log4j
+      {{- end }}
+        {{- if .Values.externalsecrets.enabled }}
+        - secret:
+            secretName: capitolis-secrets
+          name: capitolis-secrets
+        {{- end }}
+      {{- if .Values.extraVolumesProperties }}
+{{ tpl (toYaml .Values.extraVolumesProperties) $ | indent 8 }}
+      {{- end }}
+
+{{- end }}
+

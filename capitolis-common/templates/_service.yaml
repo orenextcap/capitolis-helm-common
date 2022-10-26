@@ -1,0 +1,20 @@
+{{- if .Values.service.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "main-chart.fullname" . }}
+  labels:
+    {{- include "main-chart.labels" . | nindent 4 }}
+spec:
+  ports:
+  {{- range $value := .Values.service.ports }}
+  - name: "{{ $value.name }}"
+    protocol: "{{ $value.protocol }}"
+    port: {{ $value.port }}
+    targetPort: {{ $value.targetPort }}
+  {{- end }}
+  selector:
+    {{- include "main-chart.selectorLabels" . | nindent 4 }}
+  sessionAffinity: {{ .Values.service.sessionAffinity }}
+  type: ClusterIP
+{{- end }}

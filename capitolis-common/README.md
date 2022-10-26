@@ -1,95 +1,104 @@
-# main-chart
+# Capitolis ArgoCD
+## Confluence directory:
+https://capitolis.atlassian.net/wiki/spaces/DEP/pages/2880995343/ArgoCD
+## What is Argo CD?
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.16.0](https://img.shields.io/badge/AppVersion-1.16.0-informational?style=flat-square)
+Argo CD is a declarative, GitOps continuous delivery tool for Kubernetes.
 
-A Helm chart for Kubernetes
+## Documentation
 
-## Values
+To learn more about Argo CD [go to the complete documentation](https://argoproj.github.io/argo-cd/).
+Check live demo at https://cd.apps.argoproj.io/.
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| affinity | object | `{}` |  |
-| autoscaling | object | `{"enabled":false,"maxReplicas":100,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | add autoscaling Custom metrics names can befound at `kubectl get --raw "/apis/external.metrics.k8s.io/v1beta1/" |jq` and if needed to add helm/argo/infra/prometheus-adapter.yaml |
-| configmap | object | `{"annotations":{},"enabled":true,"load_default_application_properties":true}` | add configmap |
-| containerCommand | string | `nil` | Add a custom command to run on main container Example (run echo "Hello World"): containerCommand:   - "echo"   - "Hello World" |
-| cronjob.concurrencyPolicy | string | `"Replace"` |  |
-| cronjob.failedJobsHistoryLimit | int | `5` |  |
-| cronjob.jobs | string | `nil` |  |
-| cronjob.restartPolicy | string | `"OnFailure"` |  |
-| cronjob.successfulJobsHistoryLimit | int | `5` |  |
-| deployment.enabled | bool | `true` |  |
-| env | object | `{}` | add env variables |
-| externalsecrets | object | `{"enabled":false,"path":"/usr/src/app/config/application-kamus.properties"}` | add support for external secrets  enabled: true   secrets:     - staging-mysql-storeconfig: storeconfig-db-password |
-| extraObjects | list | `[]` | Create a dynamic manifests via values: |
-| extraVolumeMounts | list | `[]` |  |
-| extraVolumesProperties | list | `[]` |  |
-| fullName | string | `""` |  |
-| fullnameOverride | string | `""` |  |
-| image.pullPolicy | string | `"Always"` |  |
-| image.repository | string | `"nginx"` |  |
-| image.tag | string | `"latest"` |  |
-| imagePullSecrets | list | `[]` |  |
-| ingress.annotations | object | `{}` |  |
-| ingress.enabled | bool | `false` |  |
-| ingress.hosts[0].extra_paths | list | `[]` |  |
-| ingress.hosts[0].host | string | `"chart-example.local"` |  |
-| ingress.hosts[0].paths | list | `[]` |  |
-| ingress.pathType | string | `"Prefix"` |  |
-| ingress.service_port | int | `80` |  |
-| ingress.tls | list | `[]` |  |
-| ingress_alb.annotations | object | `{}` |  |
-| ingress_alb.enabled | bool | `false` |  |
-| ingress_alb.hosts[0].extra_paths | list | `[]` |  |
-| ingress_alb.hosts[0].host | string | `"chart-example.local"` |  |
-| ingress_alb.hosts[0].paths | list | `[]` |  |
-| ingress_alb.pathType | string | `"Prefix"` |  |
-| ingress_alb.service_port | int | `80` |  |
-| ingress_alb.tls | list | `[]` |  |
-| initContainers | object | `{"command":null,"enabled":false,"repository":{"custom":false,"image":null,"tag":null}}` | Add a initContainers and specify the command to run Example (run echo "Hello World"):  enabled: true  command:   - "echo"   - "Hello World" |
-| job.Annotations | string | `nil` |  |
-| job.containerCommand | string | `nil` |  |
-| job.enabled | bool | `false` |  |
-| job.image.repository | string | `"nginx"` |  |
-| job.image.tag | string | `"latest"` |  |
-| job.resources | object | `{}` |  |
-| labels | string | `nil` |  |
-| livenessProbe.failureThreshold | int | `3` |  |
-| livenessProbe.httpGet.path | string | `"/health"` |  |
-| livenessProbe.httpGet.port | int | `8082` |  |
-| livenessProbe.httpGet.scheme | string | `"HTTP"` |  |
-| livenessProbe.initialDelaySeconds | int | `300` |  |
-| livenessProbe.periodSeconds | int | `30` |  |
-| livenessProbe.successThreshold | int | `1` |  |
-| livenessProbe.timeoutSeconds | int | `1` |  |
-| nameOverride | string | `""` |  |
-| nodeSelector | object | `{}` |  |
-| podAnnotations | object | `{}` |  |
-| podSecurityContext | object | `{}` |  |
-| propertiesEnvName | string | `nil` |  |
-| readinessProbe.failureThreshold | int | `3` |  |
-| readinessProbe.httpGet.path | string | `"/health"` |  |
-| readinessProbe.httpGet.port | int | `8082` |  |
-| readinessProbe.httpGet.scheme | string | `"HTTP"` |  |
-| readinessProbe.initialDelaySeconds | int | `10` |  |
-| readinessProbe.periodSeconds | int | `10` |  |
-| readinessProbe.successThreshold | int | `1` |  |
-| readinessProbe.timeoutSeconds | int | `1` |  |
-| replicaCount | int | `1` |  |
-| resources | object | `{}` |  |
-| revisionHistoryLimit | int | `0` |  |
-| securityContext | object | `{}` |  |
-| service.enabled | bool | `true` |  |
-| service.healthcheck_path | string | `nil` |  |
-| service.ports | list | `[]` |  |
-| service.sessionAffinity | string | `nil` |  |
-| service.startupProbe.enabled | bool | `false` |  |
-| service.type | string | `"ClusterIP"` |  |
-| serviceAccount.annotations | object | `{}` |  |
-| serviceAccount.create | bool | `false` |  |
-| serviceAccount.name | string | `""` |  |
-| strategy | object | `{"rollingUpdate":{"maxSurge":"25%","maxUnavailable":"25%"}}` | Create a deployment strategy  strategy:    rollingUpdate:      maxUnavailable: 0      maxSurge: 3 |
-| teamName | string | `""` |  |
-| tolerations | list | `[]` |  |
+## New env Installation
 
-----------------------------------------------
-Autogenerated from chart metadata using [helm-docs v1.5.0](https://github.com/norwoodj/helm-docs/releases/v1.5.0)
+ArgoCD should be automatically installed on each cluster via Terraform (v2)
+
+1. first make sure that there is in the `secrets manager` ssh private key in the project with the name `argocd/github-ssh`, this will give ArgoCD the ability to pull local repos
+> Currently, this key is in eu-west-1 (this is the ssh private key from the Jenkins server)
+> Terraform already installs external-secrets to automatically add the ssh key as a secret for ArgoCD
+
+There are two ways to authenticate against ArgoCD
+  1. SSO - see valery for more info
+  2. Local users
+## ArgoCD initial Admin password
+
+1. To get Initial Admin Password
+   ArgoCD on creation creates an initial admin password, once change this password is irrelevant
+   to retrieve this password please run the next command
+```bash
+  # Get the first password
+  kubectl get secrets -n argocd argocd-initial-admin-secret -o json | jq -r '.data.password' | base64 -d
+```
+
+2. now if you want to change local admin password please install ArgoCD CLI tool
+```bash
+  brew tap argoproj/tap
+  brew install argoproj/tap/argocd
+```
+
+
+3. now access the cluster via cli
+```bash
+  # login to the cluster
+  argocd login <ARGOCD_SERVER_url>
+  # And change the admin password
+  argocd account update-password
+```
+> If using SSO you can just disable local admin [ArgoCD-cm](helm/infra/templates/custom_resources/argocd-cm.yaml) and have everyone connect only via sso
+
+Now you should have access to the cluster via UI
+
+## New cluster (once per cluster)
+If you have a new cluster
+
+1. go to `argocd/app-of-apps`
+2. copy one of the yaml files and change its name and contents to the name of the new cluster (i.e `cp qa2.yaml <new_cluster_name>`.yaml)
+3. copy a dir and replace configurations based on new envs name (i.e `cp -r qa2 <new_cluster_name>`)
+   1. in `infra.yaml` you can choose which users have access and to where, and cluster specific things such as role ARNs and acm arn and sso configurations
+   2. in `apps.yaml` you just point to the cluster dir in `argocd/envs/<new_cluster_name>`
+
+## Adding a new namespace ##
+To add a new namespace:
+
+1. go to the Desired envs dir - `cd argocd/envs/<desired_env>/`
+2. copy one of the files to a new file with the name `<new_namespace_name>.yaml` and change values inside to represent new namespace
+3. now `cp argocd/base/values.yaml argocd/envs/states/values-<new_namespace_name>.yaml` applications in base in the new `values-<new_namespace_name>.yaml` # this is the highest and third values override, this overrides the values in argoApp
+> Need to verify that db schema is created and available or the pods will crash
+
+## Adding a new Micro-Service
+To add a new Micro-Service please follow the following steps
+
+1. Create your new service in the main Helm chart:
+   ```bash
+   cd helm/apps/<Directory>/<service-name>/
+   touch values.yaml
+   # Example: cd helm/apps/common/oren-service/values.yaml
+   # Copy an already created service, so you'll have the template.
+   ```
+2. Add the new <service>.yaml files under a couple of directories:
+   ```bash
+   cd argocd/base/templates/argocdApps-<Directory>/
+   touch <service-name>.yaml
+   # Example: cd argocd/base/templates/argocdApps-common/oren-service.yaml
+   # Again copy from an already created service, and modify to your service.
+   ```
+3. Add the service to the file: 
+   ```bash
+   argocd/base/values.yaml
+   # Copy from a previous service.
+   ```
+5. Add the new service to the correct environment.yaml
+   ```bash
+   cd argocd/envs/states
+   # Choose the correct environment, Example: values-edge2-capitolis.yaml
+   # Add your service and enable it (Copy from a previous service)
+   # You can add the service to other envs too, and just disable it.
+   # when you'll want to deploy you'll just need to enable.
+   ```
+
+
+## Argocd endpoint
+ * Url: `https://argocd-<cluster-name>.capitolis.com/applications`
+ * User: admin
+ * Pass: [initial-password](#argocd-initial-admin-password) / or sso
